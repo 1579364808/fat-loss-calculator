@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>减脂计算器 · 好人松松</title>
+<style>
+:root {
+  --bg: #0d0d0d;
+  --surface: #171717;
+  --surface2: #1e1e1e;
+  --border: #2a2a2a;
+  --text: #d4d4d4;
+  --text2: #999;
+  --text3: #666;
+  --amber: #f59e0b;
+  --amber2: #d97706;
+  --amber-glow: rgba(245,158,11,0.15);
+  --red: #ef4444;
+  --green: #22c55e;
+  --blue: #3b82f6;
+  --radius: 10px;
+  --radius-sm: 6px;
+  --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-mono: 'Cascadia Code', 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;font-size:15px}
+body{
+  font-family:var(--font);
+  background:var(--bg);
+  color:var(--text);
+  line-height:1.6;
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+/* Subtle noise texture overlay */
+body::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  opacity:.03;
+  pointer-events:none;
+  z-index:9999;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+}
+
+.container{max-width:960px;margin:0 auto;padding:0 16px}
+
+/* Header */
+.header{
+  text-align:center;
+  padding:48px 0 32px;
+  border-bottom:1px solid var(--border);
+  margin-bottom:32px;
+}
+.header .brand{
+  font-size:.75rem;
+  text-transform:uppercase;
+  letter-spacing:.2em;
+  color:var(--amber);
+  font-weight:600;
+  margin-bottom:8px;
+}
+.header h1{
+  font-size:2rem;
+  font-weight:800;
+  letter-spacing:-.02em;
+  color:#fff;
+  margin-bottom:4px;
+}
+.header .subtitle{
+  color:var(--text2);
+  font-size:.85rem;
+}
+.header .credit{
+  color:var(--text3);
+  font-size:.7rem;
+  margin-top:6px;
+}
+
+/* Section */
+.section{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:24px;
+  margin-bottom:20px;
+}
+.section-title{
+  font-size:.75rem;
+  text-transform:uppercase;
+  letter-spacing:.15em;
+  color:var(--amber);
+  font-weight:700;
+  margin-bottom:16px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.section-title .icon{font-size:1.1rem}
+
+/* Scheme Pills */
+.scheme-pills{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-bottom:20px;
+}
+.scheme-pill{
+  padding:7px 14px;
+  border-radius:20px;
+  border:1px solid var(--border);
+  background:var(--surface2);
+  color:var(--text2);
+  cursor:pointer;
+  font-size:.78rem;
+  transition:all .2s;
+  white-space:nowrap;
+  user-select:none;
+}
+.scheme-pill:hover{
+  border-color:var(--amber2);
+  color:var(--text);
+}
+.scheme-pill.active{
+  background:var(--amber);
+  color:#000;
+  border-color:var(--amber);
+  font-weight:700;
+}
+
+/* Input Grid */
+.input-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+  gap:14px;
+}
+.input-group{display:flex;flex-direction:column;gap:4px}
+.input-group label{
+  font-size:.72rem;
+  color:var(--text2);
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  font-weight:600;
+}
+.input-group input,.input-group select{
+  background:var(--bg);
+  border:1px solid var(--border);
+  color:var(--text);
+  padding:10px 12px;
+  border-radius:var(--radius-sm);
+  font-size:.9rem;
+  font-family:var(--font-mono);
+  transition:border-color .2s;
+  width:100%;
+}
+.input-group input:focus,.input-group select:focus{
+  outline:none;
+  border-color:var(--amber);
+  box-shadow:0 0 0 3px var(--amber-glow);
+}
+.input-group input.invalid{border-color:var(--red)}
+.input-group .hint{font-size:.65rem;color:var(--text3)}
+
+/* Radio group */
+.radio-group{display:flex;gap:4px}
+.radio-group button{
+  flex:1;
+  padding:10px;
+  border:1px solid var(--border);
+  background:var(--bg);
+  color:var(--text2);
+  cursor:pointer;
+  font-size:.82rem;
+  transition:all .2s;
+}
+.radio-group button:first-child{border-radius:var(--radius-sm) 0 0 var(--radius-sm)}
+.radio-group button:last-child{border-radius:0 var(--radius-sm) var(--radius-sm) 0}
+.radio-group button.active{
+  background:var(--amber);
+  color:#000;
+  border-color:var(--amber);
+  font-weight:700;
+}
+
+/* Results Grid */
+.results-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(140px,1fr));
+  gap:12px;
+}
+.result-card{
+  background:var(--bg);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:14px;
+  text-align:center;
+}
+.result-card .value{
+  font-family:var(--font-mono);
+  font-size:1.5rem;
+  font-weight:800;
+  color:#fff;
+}
+.result-card .value.highlight{color:var(--amber)}
+.result-card .label{
+  font-size:.68rem;
+  color:var(--text2);
+  margin-top:2px;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+}
+
+/* Meal Cards */
+.meal-list{display:flex;flex-direction:column;gap:14px}
+.meal-card{
+  background:var(--bg);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  overflow:hidden;
+}
+.meal-card-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:12px 16px;
+  background:var(--surface2);
+  border-bottom:1px solid var(--border);
+  cursor:pointer;
+  user-select:none;
+}
+.meal-card-header .meal-name{font-weight:700;font-size:.9rem}
+.meal-card-header .meal-macros{
+  display:flex;
+  gap:16px;
+  font-family:var(--font-mono);
+  font-size:.8rem;
+}
+.meal-card-header .meal-macros span{color:var(--amber);font-weight:700}
+.meal-card-body{padding:16px;display:none}
+.meal-card.open .meal-card-body{display:block}
+.meal-card-header .chevron{transition:transform .2s;color:var(--text3)}
+.meal-card.open .chevron{transform:rotate(180deg)}
+
+/* Food Selector */
+.food-category{margin-bottom:12px}
+.food-category-label{
+  font-size:.7rem;
+  text-transform:uppercase;
+  letter-spacing:.1em;
+  color:var(--text3);
+  margin-bottom:6px;
+  font-weight:700;
+}
+.food-options{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+}
+.food-option{
+  padding:6px 12px;
+  border-radius:16px;
+  border:1px solid var(--border);
+  background:var(--surface2);
+  color:var(--text2);
+  cursor:pointer;
+  font-size:.75rem;
+  transition:all .15s;
+  white-space:nowrap;
+}
+.food-option:hover{border-color:var(--amber2);color:var(--text)}
+.food-option.selected{
+  background:var(--amber);
+  color:#000;
+  border-color:var(--amber);
+  font-weight:700;
+}
+.food-result{
+  margin-top:8px;
+  padding:8px 12px;
+  background:rgba(245,158,11,.08);
+  border-radius:var(--radius-sm);
+  font-family:var(--font-mono);
+  font-size:.85rem;
+  color:var(--amber);
+  display:none;
+}
+.food-result.show{display:block}
+
+/* Training Tabs */
+.training-tabs{display:flex;gap:0;margin-bottom:16px}
+.training-tab{
+  flex:1;
+  padding:10px;
+  text-align:center;
+  background:var(--bg);
+  border:1px solid var(--border);
+  color:var(--text2);
+  cursor:pointer;
+  font-size:.78rem;
+  transition:all .2s;
+}
+.training-tab:first-child{border-radius:var(--radius-sm) 0 0 var(--radius-sm)}
+.training-tab:last-child{border-radius:0 var(--radius-sm) var(--radius-sm) 0}
+.training-tab.active{
+  background:var(--amber);
+  color:#000;
+  border-color:var(--amber);
+  font-weight:700;
+}
+.training-day{display:none}
+.training-day.active{display:block}
+.training-group{margin-bottom:12px}
+.training-group h4{
+  font-size:.82rem;
+  color:var(--amber);
+  margin-bottom:4px;
+}
+.training-group ul{
+  list-style:none;
+  padding-left:0;
+}
+.training-group li{
+  font-size:.78rem;
+  color:var(--text2);
+  padding:2px 0;
+  padding-left:12px;
+  border-left:2px solid var(--border);
+}
+
+/* Tabs for force/rest day */
+.day-tabs{display:flex;gap:8px;margin-bottom:16px}
+.day-tab{
+  padding:8px 20px;
+  border-radius:20px;
+  border:1px solid var(--border);
+  background:var(--surface2);
+  color:var(--text2);
+  cursor:pointer;
+  font-size:.8rem;
+  transition:all .2s;
+}
+.day-tab.active{
+  background:var(--amber);
+  color:#000;
+  border-color:var(--amber);
+  font-weight:700;
+}
+
+/* Collapsible */
+.collapse-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:10px 0;
+  cursor:pointer;
+  user-select:none;
+  border-bottom:1px solid var(--border);
+  margin-bottom:12px;
+}
+.collapse-header .chevron{transition:transform .2s}
+.collapse-body{display:none}
+.collapse.open .collapse-body{display:block}
+.collapse.open .chevron{transform:rotate(180deg)}
+
+/* Summary Table */
+.summary-table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:.8rem;
+}
+.summary-table th,.summary-table td{
+  padding:8px 12px;
+  text-align:left;
+  border-bottom:1px solid var(--border);
+}
+.summary-table th{
+  font-size:.68rem;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  color:var(--text3);
+  font-weight:700;
+}
+.summary-table td{font-family:var(--font-mono)}
+.summary-table .highlight{color:var(--amber);font-weight:700}
+
+/* Footer */
+.footer{
+  text-align:center;
+  padding:32px 0;
+  color:var(--text3);
+  font-size:.7rem;
+  border-top:1px solid var(--border);
+  margin-top:32px;
+}
+
+/* Cardio calc */
+.cardio-row{display:flex;gap:12px;align-items:end;margin-bottom:12px;flex-wrap:wrap}
+.cardio-row .input-group{flex:1;min-width:120px}
+
+/* Info callout */
+.callout{
+  padding:12px 16px;
+  border-radius:var(--radius-sm);
+  font-size:.78rem;
+  margin-bottom:12px;
+  border-left:3px solid var(--amber);
+  background:rgba(245,158,11,.06);
+  color:var(--text2);
+}
+
+/* Responsive */
+@media(max-width:640px){
+  .header h1{font-size:1.5rem}
+  .input-grid{grid-template-columns:1fr 1fr}
+  .results-grid{grid-template-columns:1fr 1fr}
+  .scheme-pills{gap:5px}
+  .scheme-pill{padding:6px 10px;font-size:.7rem}
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- Header -->
+<header class="header">
+  <div class="brand">好人松松 · 减脂方案</div>
+  <h1>减脂计算器</h1>
+  <p class="subtitle">基于B站好人松松《健身Excel超级套表》26年4月最新版</p>
+  <p class="credit">饮食方案自动计算 · 8种训练时间 · 完整食物数据库 · 三分化训练计划</p>
+</header>
+
+<!-- Section: Training Time -->
+<div class="section">
+  <div class="section-title"><span class="icon">&#9200;</span> 训练时间方案</div>
+  <div class="scheme-pills" id="schemePills"></div>
+  <p style="font-size:.72rem;color:var(--text3);margin-top:8px" id="schemeDesc"></p>
+</div>
+
+<!-- Section: Body Data -->
+<div class="section">
+  <div class="section-title"><span class="icon">&#128202;</span> 身体数据</div>
+  <div class="input-grid">
+    <div class="input-group">
+      <label>性别</label>
+      <div class="radio-group" id="genderGroup"></div>
+    </div>
+    <div class="input-group">
+      <label>身高 (cm)</label>
+      <input type="number" id="height" value="167" min="100" max="250" step="1">
+    </div>
+    <div class="input-group">
+      <label>体重 (kg)</label>
+      <input type="number" id="weight" value="65" min="30" max="250" step="0.1">
+    </div>
+    <div class="input-group">
+      <label>年龄</label>
+      <input type="number" id="age" value="24" min="14" max="80" step="1">
+    </div>
+    <div class="input-group">
+      <label>训练水平</label>
+      <select id="trainLevel">
+        <option value="novice">新手</option>
+        <option value="intermediate" selected>有基础</option>
+        <option value="advanced">老手</option>
+      </select>
+    </div>
+    <div class="input-group">
+      <label>每周有氧 (小时)</label>
+      <input type="number" id="cardioHours" value="2" min="0" max="30" step="0.5">
+    </div>
+    <div class="input-group">
+      <label>当前体脂率 (%)</label>
+      <input type="number" id="bfCurrent" value="24" min="5" max="50" step="0.5">
+    </div>
+    <div class="input-group">
+      <label>目标体脂率 (%)</label>
+      <input type="number" id="bfTarget" value="15" min="5" max="50" step="0.5">
+    </div>
+  </div>
+  <div class="callout" style="margin-top:14px;font-size:.72rem">
+    &#128161; 碳水和蛋白质配额由计算器<b>自动根据应吃热量推导</b>，无需手动填写。如需微调，可在下方「计算结果」区域直接修改。
+  </div>
+</div>
+
+<!-- Section: Results -->
+<div class="section">
+  <div class="section-title"><span class="icon">&#128293;</span> 计算结果</div>
+  <div class="results-grid" id="resultsGrid"></div>
+</div>
+
+<!-- Section: Meal Plan -->
+<div class="section">
+  <div class="section-title"><span class="icon">&#127860;</span> 每日餐单</div>
+  <div class="day-tabs" id="dayTabs"></div>
+  <div class="callout" style="font-size:.72rem">
+    &#9888;&#65039; 食物的1/2/3/4/5/6/7是<b>任选一种</b>，不是都吃。每种互相等价，碳水/蛋白质的量相同。计算食物重量需要的营养率数据参考视频23分10秒。
+  </div>
+  <div class="callout" id="nightHint" style="font-size:.72rem;display:none;border-left-color:#ef4444;background:rgba(239,68,68,.06)">
+    &#127769; <b>夜里练注意：</b>晚饭到训练之间隔太久容易饿，练前30分钟从晚饭碳水里<b>分5-10g出来垫一下</b>（半片吐司/半根香蕉/几颗旺仔小馒头/半瓶脉动），晚饭对应少吃等量碳水。总量不变，只是提前吃。
+  </div>
+  <div class="meal-list" id="mealList"></div>
+</div>
+
+<!-- Section: Cardio -->
+<div class="section">
+  <div class="section-title"><span class="icon">&#128692;</span> 有氧热量参考</div>
+  <div class="callout">用于估算「有氧消耗」字段。饮食方案里的「有氧消耗」= 有氧运动每小时热量消耗 × 每周小时数 ÷ 7天</div>
+  <div class="collapse" id="cardioCollapse">
+    <div class="collapse-header" onclick="this.parentElement.classList.toggle('open')">
+      <span style="font-weight:700;font-size:.85rem">心率法估算</span>
+      <span class="chevron">&#9660;</span>
+    </div>
+    <div class="collapse-body">
+      <div class="cardio-row">
+        <div class="input-group">
+          <label>静息心率 (次/分)</label>
+          <input type="number" id="restHR" value="70" min="40" max="100">
+        </div>
+        <div class="input-group">
+          <label>运动心率 (次/分)</label>
+          <input type="number" id="activeHR" value="120" min="80" max="200">
+        </div>
+        <div class="result-card" style="min-width:180px">
+          <div class="value highlight" id="cardioKcal">—</div>
+          <div class="label">每小时消耗 (kcal/kg)</div>
+        </div>
+      </div>
+      <p style="font-size:.68rem;color:var(--text3)">公式：每kg消耗 = 活动心率 ÷ 静息心率 × 6.4 - 6.2</p>
+    </div>
+  </div>
+  <div style="margin-top:12px">
+    <p style="font-size:.72rem;color:var(--text3)"><b>运动项目法（简化参考）：</b> 走路 3-5 kcal/kg/h · 跑步 7-12 kcal/kg/h · 骑行 4-8 kcal/kg/h · 游泳 6-10 kcal/kg/h · 跳操 5-8 kcal/kg/h</p>
+  </div>
+</div>
+
+<!-- Section: Training Plan -->
+<div class="section">
+  <div class="section-title"><span class="icon">&#127947;</span> 健身房三分化训练计划</div>
+  <div class="training-tabs" id="trainingTabs"></div>
+  <div id="trainingContent"></div>
+  <div class="callout" style="margin-top:12px;font-size:.72rem">
+    <b>训练参数：</b>每周3-5次 · 组间休息：多关节2-3分钟，单关节1-1.5分钟 · 配重：8-12次力竭 · 总时长1-1.5小时 · 女性：练胸频率减半，股四少练，配重可稍轻(10-15次)
+  </div>
+</div>
+
+<!-- Section: Fat Rules -->
+<div class="section">
+  <div class="section-title"><span class="icon">&#129385;</span> 脂肪摄入规则（不计算，按规则吃）</div>
+  <div style="font-size:.78rem;color:var(--text2);line-height:1.8">
+    <p>&#9989; <b>脂肪基础来源：</b>早饭的蛋黄+牛奶，以及正餐炒菜的用油</p>
+    <p>&#10060; <b>排除高脂肉：</b>鸡鸭皮、猪大排、糖醋里脊、锅包肉、鸡翅、猪蹄、牛腩、牛排、排骨、烤肉、炸肉、午餐肉、肥牛、肥羊、肉肠、肉饼、肉馅、肉丸</p>
+    <p>&#10060; <b>排除糖油混合物：</b>饼干、蛋糕、点心、糕点、甜品、油条、煎饼、花式面包、膨化食品</p>
+    <p>&#9888;&#65039; <b>如果正餐低油无油</b>（卤肉、炖肉、清炒、清炖、轻食、水煮），需要额外补充脂肪来源</p>
+    <p>&#9888;&#65039; <b>如果不吃蛋黄牛奶</b>，早饭脂肪缺乏，需要从其他餐补脂肪</p>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer class="footer">
+  数据来源：B站好人松松《健身Excel超级套表》26年4月最新版 · 仅供个人参考使用 · 配套视频讲解 BV1zu4m1N76R
+</footer>
+
+</div><!-- /container -->
+
+<script>
+// ============ SCHEME CONFIG ============
+const SCHEMES = {
+  s1: {
+    id:'s1', name:'早饭后练（早起版）', desc:'上午早起，早饭=练前餐垫肚子，练后吃全天最大一顿练后餐',
+    force:[
+      {meal:'①早饭=练前餐',cp:15,pp:20,note:'吃了就准备开练，怕太饱可吃低饱腹感碳水'},
+      {meal:'②练后餐',cp:35,pp:20,note:'全天最大一顿，最好练完半小时内吃上'},
+      {meal:'③午饭=其他餐',cp:20,pp:20,note:'练后餐刚吃完，这顿可晚些或少些'},
+      {meal:'④晚饭=其他餐',cp:20,pp:20},
+      {meal:'⑤零食/夜宵',cp:10,pp:20,isSnack:true}
+    ],
+    rest:[
+      {meal:'①早饭',cp:15,pp:20},
+      {meal:'②午饭',cp:37.5,pp:30},
+      {meal:'③晚饭',cp:37.5,pp:30},
+      {meal:'④零食/夜宵',cp:10,pp:20,isSnack:true}
+    ]
+  },
+  s2: {
+    id:'s2', name:'早饭后练（晚起版）', desc:'上午起床晚，早饭=练前餐，练后吃午饭作为练后餐',
+    force:[
+      {meal:'①早饭=练前餐',cp:20,pp:20,note:'吃了就准备开练'},
+      {meal:'②午饭=练后餐',cp:40,pp:30,note:'全天最大一顿，最好练完半小时内吃上'},
+      {meal:'③晚饭=其他餐',cp:30,pp:30},
+      {meal:'④零食/夜宵',cp:10,pp:20,isSnack:true}
+    ],
+    rest:[
+      {meal:'①早饭',cp:20,pp:20},
+      {meal:'②午饭',cp:35,pp:30},
+      {meal:'③晚饭',cp:35,pp:30},
+      {meal:'④零食/夜宵',cp:10,pp:20,isSnack:true}
+    ]
+  },
+  s3: {
+    id:'s3', name:'午饭前练', desc:'午饭前练，午饭=练后餐（全天最大一顿）',
+    force:[
+      {meal:'①早饭',cp:20,pp:20},
+      {meal:'②练前餐',cp:15,pp:0,note:'垫点碳水，不吃蛋白质，五六分饱即可'},
+      {meal:'③午饭=练后餐',cp:35,pp:30,note:'全天最大一顿，最好练完半小时内吃上'},
+      {meal:'④晚饭=其他餐',cp:20,pp:30},
+      {meal:'⑤零食/夜宵',cp:10,pp:20,isSnack:true}
+    ],
+    rest:[
+      {meal:'①早饭',cp:20,pp:20},
+      {meal:'②午饭',cp:35,pp:30},
+      {meal:'③晚饭',cp:35,pp:30},
+      {meal:'④零食/夜宵',cp:10,pp:20,isSnack:true}
+    ]
+  },
+  s4: {
+    id:'s4', name:'午饭后练', desc:'午饭后练，午饭=练前餐垫肚子，练后吃练后餐',
+    force:[
+      {meal:'①早饭',cp:20,pp:20},
+      {meal:'②午饭=练前餐',cp:15,pp:0,note:'垫点碳水，不吃蛋白质，五六分饱即可'},
+      {meal:'③练后餐',cp:35,pp:30,note:'全天最大一顿，最好练完半小时内吃上'},
+      {meal:'④晚饭=其他餐',cp:20,pp:30},
+      {meal:'⑤零食/夜宵',cp:10,pp:20,isSnack:true}
+    ],
+    rest:[
+      {meal:'①早饭',cp:20,pp:20},
+      {meal:'②午饭',cp:35,pp:30},
+      {meal:'③晚饭',cp:35,pp:30},
+      {meal:'④零食/夜宵',cp:10,pp:20,isSnack:true}
+    ]
+  },
+  s5: {
+    id:'s5', name:'晚饭前练', desc:'晚饭前练，晚饭=练后餐（全天最大一顿）',
+    force:[
+      {meal:'①早饭',cp:20,pp:20},
+      {meal:'②午饭=其他餐',cp:20,pp:30},
+      {meal:'③练前餐',cp:15,pp:0,note:'垫点碳水，不吃蛋白质，五六分饱即可'},
+      {meal:'④晚饭=练后餐',cp:35,pp:30,note:'全天最大一顿，最好练完半小时内吃上'},
+      {meal:'⑤零食/夜宵',cp:10,pp:20,isSnack:true}
+    ],
+    rest:[
+      {meal:'①早饭',cp:20,pp:20},
+      {meal:'②午饭',cp:35,pp:30},
+      {meal:'③晚饭',cp:35,pp:30},
+      {meal:'④零食/夜宵',cp:10,pp:20,isSnack:true}
+    ]
+  },
+  s6: {
+    id:'s6', name:'晚饭后练', desc:'晚饭后练，晚饭=练前餐垫肚子，练后吃练后餐',
+    force:[
+      {meal:'①早饭',cp:20,pp:20},
+      {meal:'②午饭=其他餐',cp:20,pp:30},
+      {meal:'③晚饭=练前餐',cp:15,pp:0,note:'垫点碳水，五六分饱即可，不吃蛋白质'},
+      {meal:'④练后餐',cp:35,pp:30,note:'全天最大一顿，最好练完半小时内吃上'},
+      {meal:'⑤零食/夜宵',cp:10,pp:20,isSnack:true}
+    ],
+    rest:[
+      {meal:'①早饭',cp:20,pp:20},
+      {meal:'②午饭',cp:35,pp:30},
+      {meal:'③晚饭',cp:35,pp:30},
+      {meal:'④零食/夜宵',cp:10,pp:20,isSnack:true}
+    ]
+  },
+  s7: {
+    id:'s7', name:'夜里练', desc:'白天节约配额，夜里练完吃练后餐（离睡觉太近不宜锻炼）',
+    force:[
+      {meal:'①早饭',cp:20,pp:20},
+      {meal:'②午饭=其他餐',cp:20,pp:20},
+      {meal:'③晚饭=其他餐',cp:20,pp:20,note:'如果练前饿了，从本餐碳水里分出约5-10g，训练前30分钟垫一下（半片吐司/半根香蕉/几颗旺仔小馒头），晚饭相应少吃等量的碳水'},
+      {meal:'④练后餐',cp:30,pp:20,note:'如果离睡觉很近，不宜在这种很晚的时间锻炼'},
+      {meal:'⑤零食/夜宵',cp:10,pp:20,isSnack:true}
+    ],
+    rest:[
+      {meal:'①早饭',cp:20,pp:20},
+      {meal:'②午饭',cp:35,pp:30},
+      {meal:'③晚饭',cp:35,pp:30},
+      {meal:'④零食/夜宵',cp:10,pp:20,isSnack:true}
+    ]
+  },
+  s8: {
+    id:'s8', name:'无力训者', desc:'纯饮食控制，不运动，每天同一套餐单',
+    force:[
+      {meal:'①早饭',cp:20,pp:20},
+      {meal:'②午饭',cp:35,pp:30},
+      {meal:'③晚饭',cp:35,pp:30},
+      {meal:'④零食/夜宵',cp:10,pp:20,isSnack:true}
+    ],
+    rest:[
+      {meal:'①早饭',cp:20,pp:20},
+      {meal:'②午饭',cp:35,pp:30},
+      {meal:'③晚饭',cp:35,pp:30},
+      {meal:'④零食/夜宵',cp:10,pp:20,isSnack:true}
+    ]
+  }
+};
+
+// ============ FOOD DATABASE ============
+const FOOD_DB = {
+  carbs: {
+    '米类主食':[
+      {n:'生米',r:.75,gi:'高',note:'大米/糙米/糯米/小米/紫米/黑米近似'},
+      {n:'米饭（很软）',r:.25,gi:'高',note:'只有自己做饭才可能这么软'},
+      {n:'米饭（一般）',r:.30,gi:'高',note:'外食一般米饭'},
+      {n:'米饭（偏硬）',r:.35,gi:'高'},
+      {n:'米粥（稀）',r:.10,gi:'高'},
+      {n:'米粥（一般）',r:.13,gi:'高'},
+      {n:'米线（熟）',r:.33,gi:'高',note:'饱腹感很低，外食≥100g碳水/份'},
+      {n:'肠粉（熟）',r:.20,gi:'高',note:'一般50-70g碳水/份'},
+      {n:'粽子',r:.50,gi:'高',note:'白粽/豆沙粽，不吃肉粽'}
+    ],
+    '麦类主食':[
+      {n:'切片面包',r:.50,gi:'高',note:'普通切片脂肪率<8%'},
+      {n:'馒头/花卷/馍/馕',r:.50,gi:'高'},
+      {n:'挂面（生）',r:.75,gi:'中',note:'不建议用于练后餐'},
+      {n:'意面（生）',r:.75,gi:'低',note:'不能用于练后餐'},
+      {n:'鲜面（生）',r:.60,gi:'高',note:'外食一般≥100g碳水/份'},
+      {n:'凉面（熟）',r:.30,gi:'高'},
+      {n:'粗面（熟）',r:.30,gi:'高',note:'外食一般≥100g碳水/份'},
+      {n:'意面（熟）',r:.30,gi:'低',note:'不能用于练后餐'},
+      {n:'细面（熟）',r:.23,gi:'高',note:'外食一般≥100g碳水/份'},
+      {n:'卷饼/烙饼/馕（熟）',r:.50,gi:'高',note:'饱腹感很低'}
+    ],
+    '其他主食':[
+      {n:'红薯（生/蒸煮）',r:.18,gi:'高'},
+      {n:'红薯（烤）',r:.23,gi:'高'},
+      {n:'土豆（生/蒸煮）',r:.18,gi:'中'},
+      {n:'土豆（烤）',r:.23,gi:'高'},
+      {n:'红薯/土豆粉丝（生）',r:.84,gi:'低',note:'酸辣粉/红薯粉，不用于练后'},
+      {n:'甜玉米（生/蒸煮）',r:.20,gi:'中',note:'传统玉米，不用于练后餐'},
+      {n:'糯玉米（生/蒸煮）',r:.35,gi:'高'},
+      {n:'贝贝南瓜',r:.21,gi:'中'},
+      {n:'传统南瓜',r:.05,gi:'中'},
+      {n:'山药（生/蒸煮）',r:.12,gi:'中'},
+      {n:'藕粉（生）',r:.90,gi:'低',note:'不用于练后碳水'},
+      {n:'燕麦麸皮（生）',r:.45,gi:'低',note:'饱腹感极强，不用于练后'},
+      {n:'速食燕麦片（生）',r:.60,gi:'高',note:'饱腹感极强'},
+      {n:'速食黑麦片（生）',r:.60,gi:'高',note:'脂肪率比燕麦片低'}
+    ],
+    '方便食品':[
+      {n:'五谷道场方便面',r:.65,gi:'中',note:'碳水约50g/袋，面饼非油炸'},
+      {n:'辛拉面（普通版）',r:.65,gi:'中',note:'碳水约50g/袋'},
+      {n:'辛拉面（空空面版）',r:.65,gi:'中',note:'碳水约50g/袋，非油炸'},
+      {n:'康力快熟意大利面',r:.32,gi:'低',note:'碳水约60g/袋，不用于练后'},
+      {n:'白家陈记酸辣粉丝',r:.60,gi:'低',note:'碳水约40g/袋，不用于练后'},
+      {n:'娃哈哈八宝粥（木糖醇版）',r:.13,gi:'高',note:'碳水47g/罐'}
+    ],
+    '便携碳水':[
+      {n:'切片面包/碱水面包',r:.50,gi:'高'},
+      {n:'旺仔小馒头（46g装）',r:.88,gi:'高',note:'碳水37g/袋，约1/4蔗糖'},
+      {n:'旺仔QQ糖',r:.72,gi:'高',note:'小包20g(碳水15g)/大包70g(碳水50g)'},
+      {n:'南方黑芝麻糊（无蔗糖版）',r:.70,gi:'高',note:'碳水35g/袋'},
+      {n:'南方高山玉米糊（无蔗糖版）',r:.70,gi:'高',note:'碳水35g/袋'},
+      {n:'营养米粉',r:.75,gi:'高',note:'温水冲泡即可'},
+      {n:'十月稻田饭团',r:.25,gi:'中',note:'碳水25g/袋，开袋即食'},
+      {n:'红螺牌驴打滚',r:.86,gi:'高',note:'碳水10g/小袋，麦芽糖非蔗糖'},
+      {n:'山西烤馍',r:.70,gi:'高'},
+      {n:'非油炸干脆面',r:.75,gi:'中',note:'碳水27g/袋'},
+      {n:'非油炸锅巴',r:.65,gi:'中',note:'碳水65g/袋'},
+      {n:'BHB熟板栗',r:.35,gi:'中',note:'碳水35g/袋'},
+      {n:'沈大成豆沙青团',r:.65,gi:'高',note:'碳水45g/个，只能豆沙味'},
+      {n:'云片糕/桃片',r:.80,gi:'高',note:'蔗糖率约10%'},
+      {n:'米花糖',r:.85,gi:'高',note:'蔗糖率约10%'},
+      {n:'宝矿力运动饮料',r:.06,gi:'中',note:'30g蔗糖/瓶，不能作为练后全部碳水'},
+      {n:'脉动运动饮料',r:.05,gi:'中',note:'30g蔗糖/瓶'}
+    ],
+    '水果':[
+      {n:'干枣',r:.50,gi:'中'},
+      {n:'鲜枣',r:.30,gi:'中'},
+      {n:'椰肉',r:.30,gi:'中'},
+      {n:'榴莲',r:.28,gi:'中'},
+      {n:'菠萝蜜',r:.26,gi:'中'},
+      {n:'香蕉',r:.22,gi:'中'},
+      {n:'提子',r:.17,gi:'中'},
+      {n:'荔枝',r:.17,gi:'中'},
+      {n:'桂圆',r:.17,gi:'中'},
+      {n:'猕猴桃',r:.15,gi:'中'},
+      {n:'苹果',r:.13,gi:'低'},
+      {n:'梨',r:.13,gi:'低'},
+      {n:'车厘子',r:.13,gi:'低'},
+      {n:'火龙果',r:.13,gi:'中'},
+      {n:'芒果',r:.13,gi:'中'},
+      {n:'桑葚',r:.13,gi:'低'},
+      {n:'葡萄',r:.12,gi:'低'},
+      {n:'橘子',r:.12,gi:'低'},
+      {n:'橙子',r:.11,gi:'低'},
+      {n:'桃',r:.10,gi:'低'},
+      {n:'柚子',r:.10,gi:'低'},
+      {n:'樱桃',r:.10,gi:'低'},
+      {n:'西梅',r:.10,gi:'低'},
+      {n:'枇杷',r:.09,gi:'低'},
+      {n:'李子',r:.09,gi:'低'},
+      {n:'杏',r:.09,gi:'低'},
+      {n:'哈密瓜',r:.08,gi:'高'},
+      {n:'西瓜',r:.07,gi:'高'},
+      {n:'木瓜',r:.07,gi:'中'},
+      {n:'圣女果（小番茄）',r:.06,gi:'低'},
+      {n:'西红柿（大番茄）',r:.03,gi:'低'}
+    ]
+  },
+  protein: {
+    '干净蛋白质':[
+      {n:'瘦肉（鱼虾生肉）',r:.15,note:'含水率高，蛋白质率稍低'},
+      {n:'瘦肉（三文鱼/金枪鱼）',r:.20,note:'中腩/赤身无油生食可视为瘦肉'},
+      {n:'瘦肉（家禽家畜生肉）',r:.20,note:'鸡鸭去皮，猪牛羊无白色脂肪层'},
+      {n:'瘦肉（一般的熟肉）',r:.25,note:'鱼虾禽畜均适用，不区分品种'},
+      {n:'瘦肉（柴感的熟肉）',r:.30,note:'酱牛肉/干柴卤肉等'},
+      {n:'瘦肉干',r:.40,note:'牛肉干/鸡肉干，碳水率最好<10%'},
+      {n:'蛋白粉',r:.75,note:'乳清蛋白70-80%，分离80-90%'}
+    ],
+    '含蛋白质混合物':[
+      {n:'鸡蛋+牛奶',perUnit:16,unit:'组合',note:'1个全蛋(6g蛋白)+1盒牛奶(10g蛋白)=16g蛋白，按视频25:30'},
+      {n:'鸡蛋（全蛋）',perUnit:6,unit:'个',note:'蛋清3g蛋白+蛋黄3g蛋白+5g脂肪'},
+      {n:'鸡蛋（蛋清）',perUnit:3,unit:'个',note:'纯蛋清，无脂肪'},
+      {n:'牛奶',perUnit:10,unit:'盒(250ml)',note:'碳水12g+蛋白10g+脂肪9g'},
+      {n:'酸奶（代糖）',perUnit:10,unit:'盒(200ml)',note:'可简单等同于纯牛奶'},
+      {n:'干黄豆',r:.35,note:'碳水34%蛋白35%脂肪16%，不能替代瘦肉'},
+      {n:'鲜黄豆/毛豆/青豆',r:.13,note:'碳水11%蛋白13%脂肪5%'},
+      {n:'豆皮/千张',r:.35,note:'碳水20%蛋白35%脂肪20%'},
+      {n:'豆腐',r:.07,note:'碳水3%蛋白7%脂肪5%'},
+      {n:'豆浆',r:.03,note:'碳水1%蛋白3%脂肪2%，热量很低'}
+    ]
+  }
+};
+
+// ============ TRAINING DATA ============
+const TRAINING = {
+  day1: {
+    title:'Day1：背+肩后束+肱二头',
+    desc:'练背会用到肩伸（肩后束）、肩水平外展（肩后束）、肘屈（肱二头），练背后继续补练肩后束、肱二头',
+    groups:[
+      {name:'下拉（选1-2个动作，共6-8组）',items:['引体向上 [宽握]','高位下拉 [中握]','器械下拉 [窄握]']},
+      {name:'划船（选1-2个动作，共6-8组）',items:['杠铃俯身划船 [宽握]','T杆俯身划船 [中握]','坐姿器械划船 [窄握]','单边哑铃划船','龙门架直臂下压']},
+      {name:'肩后束（选1-2个动作，共6-8组）',items:['哑铃俯身飞鸟','蝴蝶机反向飞鸟','龙门架反向飞鸟','坐姿器械/绳索划船（水平开肘）']},
+      {name:'肱二头（选1-2个动作，共6-8组）',items:['哑铃弯举','杠铃弯举','集中弯举','器械弯举','牧师椅弯举']}
+    ]
+  },
+  day2: {
+    title:'Day2：胸+肩前中束+肱三头',
+    desc:'练胸会用到肩屈（肩前束）、肩水平内收（肩前束）、肘伸（肱三头），练胸后继续补练肩前束、肱三头',
+    groups:[
+      {name:'中胸（选2-3个动作，共10组）',items:['杠铃/哑铃/史密斯卧推（水平推）','器械推胸（水平推）','蝴蝶机夹胸','龙门架夹胸（水平夹）']},
+      {name:'下胸（新手偶尔加做，选1个动作，共4组）',items:['龙门架夹胸（完全下夹）','龙门架夹胸（下斜夹）','器械推胸（下斜推）','杠铃/哑铃/史密斯卧推（下斜推）','双杠臂屈伸（上身前趴30-60°）']},
+      {name:'上胸（新手偶尔加做，选1个动作，共4组）',items:['杠铃/哑铃/史密斯卧推（上斜推）','器械推胸（上斜推）','龙门架夹胸（上斜夹）']},
+      {name:'肩前束（选1个动作，共5组）',items:['器械/哑铃/史密斯推举','杠铃/哑铃片前平举']},
+      {name:'肩中束（选1个动作，共5组）',items:['哑铃/龙门架侧平举','杠铃提拉']},
+      {name:'肱三头（选1个动作，共5组）',items:['龙门架直杆下压','龙门架绳索臂屈伸','哑铃颈后臂屈伸','杠铃仰卧臂屈伸','杠铃/哑铃/史密斯窄距卧推']}
+    ]
+  },
+  day3: {
+    title:'Day3：腿臀+腹',
+    desc:'股四头肌、腘绳肌、臀大肌三个大肌群难以一次都练，建议循环：男第1次股四+兼练，男第2次腘绳肌+兼练；女第1次臀大肌+兼练，女第2次腘绳肌+兼练',
+    groups:[
+      {name:'股四头肌（选1-2个动作，共6-8组）',items:['杠铃深蹲','器械腿屈伸']},
+      {name:'腘绳肌（选1-2个动作，共6-8组）',items:['罗马尼亚/传统硬拉','器械腿弯举']},
+      {name:'臀大肌（选1-2个动作，共6-8组）',items:['器械臀冲','杠铃臀冲']},
+      {name:'兼练动作（选1-2个动作，共6-8组）',items:['哈克机','倒蹬机','箭步蹲','史密斯深蹲']},
+      {name:'腹（选1-2个动作，共6-8组）',items:['平板卷腹']}
+    ]
+  }
+};
+
+// ============ STATE ============
+let state = {
+  scheme: 's7',
+  dayType: 'force', // 'force' | 'rest'
+  gender: 'male',
+  mealSelections: {} // key: "scheme-dayType-mealIdx-cat" -> foodName
+};
+
+// ============ INIT ============
+function init(){
+  renderSchemePills();
+  renderGenderGroup();
+  renderDayTabs();
+  renderTrainingTabs();
+  renderTrainingContent();
+  bindInputs();
+  updateAll();
+}
+function renderSchemePills(){
+  const container = document.getElementById('schemePills');
+  container.innerHTML = Object.values(SCHEMES).map(s =>
+    `<button class="scheme-pill${s.id===state.scheme?' active':''}" data-sid="${s.id}">${s.name}</button>`
+  ).join('');
+  container.querySelectorAll('button').forEach(b => b.addEventListener('click',()=>{
+    state.scheme = b.dataset.sid;
+    container.querySelectorAll('button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    updateAll();
+  }));
+}
+function renderGenderGroup(){
+  const g = document.getElementById('genderGroup');
+  g.innerHTML = ['male','female'].map(v =>
+    `<button class="${state.gender===v?'active':''}" data-g="${v}">${v==='male'?'男':'女'}</button>`
+  ).join('');
+  g.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+    state.gender = b.dataset.g;
+    g.querySelectorAll('button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    updateAll();
+  }));
+}
+function renderDayTabs(){
+  const s = SCHEMES[state.scheme];
+  const isNoTrain = s.id === 's8';
+  const container = document.getElementById('dayTabs');
+  if(isNoTrain){
+    container.innerHTML = '<div class="day-tab active">每天（无力训）</div>';
+  }else{
+    container.innerHTML = `
+      <button class="day-tab${state.dayType==='force'?' active':''}" data-dt="force">力训日</button>
+      <button class="day-tab${state.dayType==='rest'?' active':''}" data-dt="rest">休息日</button>
+    `;
+    container.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+      state.dayType = b.dataset.dt;
+      container.querySelectorAll('button').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      document.getElementById('nightHint').style.display = (state.scheme==='s7' && state.dayType==='force')?'block':'none';
+      renderMeals();
+    }));
+  }
+}
+
+// ============ CALCULATIONS ============
+function getInputs(){
+  const h = parseFloat(document.getElementById('height').value)||167;
+  const w = parseFloat(document.getElementById('weight').value)||65;
+  const a = parseInt(document.getElementById('age').value)||24;
+  const lvl = document.getElementById('trainLevel').value;
+  const cardioH = parseFloat(document.getElementById('cardioHours').value)||2;
+  const bfCur = parseFloat(document.getElementById('bfCurrent').value)||20;
+  const bfTar = parseFloat(document.getElementById('bfTarget').value)||15;
+  return {h,w,a,lvl,cardioH,bfCur,bfTar};
+}
+function calc(){
+  const {h,w,a,lvl,cardioH,bfCur,bfTar} = getInputs();
+  const bmi = w/((h/100)**2);
+
+  // BMR Mifflin-St Jeor
+  let bmr;
+  if(state.gender==='male') bmr = w*9.99 + h*6.25 - a*4.92 + 5;
+  else bmr = w*9.99 + h*6.25 - a*4.92 - 161;
+
+  const totalNoEx = bmr/0.7;
+
+  // Force training calories
+  const trainCals = {
+    male:{novice:150,intermediate:200,advanced:250},
+    female:{novice:100,intermediate:150,advanced:200}
+  };
+  const forceCal = trainCals[state.gender][lvl];
+
+  // Cardio estimate: ~6.5 kcal/kg/h at HR 120
+  const cardioPerHr = 6.5*w;
+  const cardioDaily = cardioPerHr*cardioH/7;
+
+  const balanceForce = totalNoEx + forceCal + cardioDaily;
+  const balanceRest = totalNoEx + cardioDaily;
+
+  // 0.64 = 0.8*0.8 (20% deficit + 20% buffer for underreporting)
+  const eatForce = balanceForce*0.64;
+  const eatRest = balanceRest*0.64;
+
+  // AUTO-DERIVED QUOTAS:
+  // Protein: fixed 1.6 g/kg (standard recommendation for fat loss muscle preservation)
+  const protF = 1.6;
+  const protR = 1.6;
+  const protForceTotal = Math.round(protF*w);
+  const protRestTotal = Math.round(protR*w);
+  const protForceCal = protForceTotal*4;
+  const protRestCal = protRestTotal*4;
+
+  // Fat: estimated ~0.55 g/kg from egg yolks + milk + cooking oil (implicit, not tracked)
+  const fatEstimate = 0.55;
+  const fatForceCal = Math.round(fatEstimate*w*9);
+  const fatRestCal = Math.round(fatEstimate*w*9);
+
+  // Carbs: derived from remaining calories
+  const carbForceCal = eatForce - protForceCal - fatForceCal;
+  const carbRestCal = eatRest - protRestCal - fatRestCal;
+  const carbForceTotal = Math.max(0,Math.round(carbForceCal/4));
+  const carbRestTotal = Math.max(0,Math.round(carbRestCal/4));
+  const carbF = Math.round(carbForceTotal/w*10)/10;
+  const carbR = Math.round(carbRestTotal/w*10)/10;
+
+  // Body fat timeline: 需减脂肪kg × 7700 ÷ 日均热量缺口
+  const fatMassCur = w * bfCur / 100;
+  const fatMassTar = w * bfTar / 100;
+  const fatToLose = Math.max(0, fatMassCur - fatMassTar);
+  // 日均缺口: 假设每周3次力训, 4次休息
+  const weeklyDeficit = (balanceForce - eatForce)*3 + (balanceRest - eatRest)*4;
+  const dailyDeficit = weeklyDeficit / 7;
+  const daysToGoal = dailyDeficit > 0 ? Math.round(fatToLose * 7700 / dailyDeficit) : null;
+  const weeksToGoal = daysToGoal ? (daysToGoal / 7).toFixed(1) : null;
+  // 理论2周减重2%作为对照
+  const weeklyLossPct = dailyDeficit > 0 ? (dailyDeficit * 7 / 7700 / w * 100) : 0;
+
+  return {
+    bmi:Math.round(bmi*10)/10,
+    bmr:Math.round(bmr),
+    totalNoEx:Math.round(totalNoEx),
+    forceCal,
+    cardioDaily:Math.round(cardioDaily),
+    balanceForce:Math.round(balanceForce),
+    balanceRest:Math.round(balanceRest),
+    eatForce:Math.round(eatForce),
+    eatRest:Math.round(eatRest),
+    carbF,carbR,protF,protR,
+    carbForceTotal,carbRestTotal,
+    protForceTotal,protRestTotal,
+    fatForceCal,fatRestCal,
+    carbForceCal:Math.round(carbForceCal),
+    carbRestCal:Math.round(carbRestCal),
+    fatMassCur:Math.round(fatMassCur*10)/10,
+    fatMassTar:Math.round(fatMassTar*10)/10,
+    fatToLose:Math.round(fatToLose*10)/10,
+    dailyDeficit:Math.round(dailyDeficit),
+    daysToGoal,
+    weeksToGoal,
+    weeklyLossPct:Math.round(weeklyLossPct*100)/100
+  };
+}
+
+// ============ RENDER ============
+function updateAll(){
+  renderResults();
+  renderDayTabs();
+  renderMeals();
+  renderSchemeDesc();
+  updateCardioCalc();
+  // Show night training hint
+  const nightHint = document.getElementById('nightHint');
+  const isNightForce = state.scheme==='s7' && state.dayType==='force';
+  nightHint.style.display = isNightForce?'block':'none';
+}
+
+function renderResults(){
+  const c = calc();
+  const isNoTrain = SCHEMES[state.scheme].id === 's8';
+
+  const cards = [
+    {v:c.bmi.toFixed(1),l:'BMI',hl:c.bmi>=28||c.bmi<18.5},
+    {v:c.bmr,l:'基础代谢 (kcal)',hl:false},
+    {v:c.totalNoEx,l:'无运动总消耗 (kcal)',hl:false},
+    ...(isNoTrain?[]:[{v:c.forceCal,l:'力训消耗 (kcal)',hl:false}]),
+    {v:c.cardioDaily,l:'有氧日均消耗 (kcal)',hl:false},
+    ...(isNoTrain?[
+      {v:c.balanceRest,l:'平衡热量 (kcal)',hl:false},
+      {v:c.eatRest,l:'&#127919; 应吃热量 (kcal)',hl:true}
+    ]:[
+      {v:c.balanceForce,l:'平衡热量·力训日',hl:false},
+      {v:c.balanceRest,l:'平衡热量·休息日',hl:false},
+      {v:c.eatForce,l:'&#127919; 应吃热量·力训日',hl:true},
+      {v:c.eatRest,l:'&#127919; 应吃热量·休息日',hl:true}
+    ]),
+    ...(isNoTrain?[
+      {v:'1.6 g/kg',l:'🥩 蛋白质配额（固定）',hl:true,sub:'减脂保肌标准值'},
+      {v:'~0.55 g/kg',l:'🧈 估算脂肪（隐式）',hl:true,sub:'蛋黄+牛奶+炒菜油'},
+      {v:c.protRestTotal+'g',l:'蛋白质总量/天',hl:true},
+      {v:(c.protRestTotal*4)+' kcal',l:'蛋白质热量 (×4)',hl:false},
+      {v:c.fatRestCal+' kcal',l:'估算脂肪热量 (×9)',hl:false},
+      {v:c.carbRestCal+' kcal',l:'碳水热量（剩余）',hl:false},
+      {v:c.carbRestTotal+'g',l:'🍚 碳水总量/天',hl:true,sub:`= ${c.carbR} g/kg`}
+    ]:[
+      {v:'1.6 g/kg',l:'🥩 蛋白质配额（固定）',hl:true,sub:'减脂保肌标准值'},
+      {v:'~0.55 g/kg',l:'🧈 估算脂肪（隐式）',hl:true,sub:'蛋黄+牛奶+炒菜油'},
+      {v:c.protForceTotal+'g',l:'蛋白质总量·力训日',hl:true},
+      {v:c.protRestTotal+'g',l:'蛋白质总量·休息日',hl:true},
+      {v:(c.protForceTotal*4)+' kcal',l:'蛋白质热量·力训日 (×4)',hl:false},
+      {v:(c.protRestTotal*4)+' kcal',l:'蛋白质热量·休息日 (×4)',hl:false},
+      {v:c.fatForceCal+' kcal',l:'估算脂肪热量·力训日 (×9)',hl:false},
+      {v:c.fatRestCal+' kcal',l:'估算脂肪热量·休息日 (×9)',hl:false},
+      {v:c.carbForceCal+' kcal',l:'碳水热量·力训日（剩余）',hl:false},
+      {v:c.carbRestCal+' kcal',l:'碳水热量·休息日（剩余）',hl:false},
+      {v:c.carbForceTotal+'g',l:'🍚 碳水总量·力训日',hl:true,sub:`= ${c.carbF} g/kg`},
+      {v:c.carbRestTotal+'g',l:'🍚 碳水总量·休息日',hl:true,sub:`= ${c.carbR} g/kg`}
+    ]),
+    // Body fat timeline
+    ...(c.daysToGoal ? [
+      {v:c.fatMassCur+' kg',l:'当前脂肪量',hl:false},
+      {v:c.fatMassTar+' kg',l:'目标脂肪量',hl:false},
+      {v:c.fatToLose+' kg',l:'需减纯脂肪',hl:true},
+      {v:c.dailyDeficit+' kcal',l:'日均热量缺口',hl:false,sub:`每周约 ${c.weeklyLossPct}% 体重`},
+      {v:c.daysToGoal+' 天',l:'预计达到目标',hl:true,sub:`约 ${c.weeksToGoal} 周`},
+      {v:'参考：2周减2%',l:'理论减重速度',hl:false,sub:'Excel建议值'}
+    ] : [
+      {v:'体脂率输入有误',l:'⚠️',hl:true,sub:'目标体脂率应低于当前'}
+    ])
+  ];
+
+  document.getElementById('resultsGrid').innerHTML = cards.map(c=>
+    `<div class="result-card">
+      <div class="value${c.hl?' highlight':''}">${c.v}</div>
+      <div class="label">${c.l}</div>
+      ${c.sub?`<div style="font-size:.62rem;color:var(--text3);margin-top:1px">${c.sub}</div>`:''}
+    </div>`
+  ).join('');
+}
+
+function renderSchemeDesc(){
+  document.getElementById('schemeDesc').textContent = SCHEMES[state.scheme].desc;
+}
+
+function renderMeals(){
+  const c = calc();
+  const s = SCHEMES[state.scheme];
+  const dt = s.id==='s8'?'force':state.dayType;
+  const meals = s[dt];
+  const carbTotal = dt==='force'?c.carbForceTotal:c.carbRestTotal;
+  const protTotal = dt==='force'?c.protForceTotal:c.protRestTotal;
+
+  const container = document.getElementById('mealList');
+  container.innerHTML = meals.map((m,i)=>{
+    const carbG = Math.round(carbTotal*m.cp/100);
+    const protG = Math.round(protTotal*m.pp/100);
+    const mealKcal = carbG*4 + protG*4;
+    const key = `${state.scheme}-${dt}-${i}`;
+
+    // Auto-select defaults on first render
+    autoSelectDefaults(key,carbG,protG,m,i);
+
+    return `<div class="meal-card open" data-key="${key}">
+      <div class="meal-card-header" onclick="this.parentElement.classList.toggle('open')">
+        <div>
+          <span class="meal-name">${m.meal}</span>
+          ${m.note?`<div style="font-size:.68rem;color:var(--text3);margin-top:2px">${m.note}</div>`:''}
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="meal-macros">
+            ${m.cp>0?`碳水 <span>${carbG}g</span> <span style="color:var(--text3);font-weight:400">${carbG*4}kcal</span> (${m.cp}%)`:''}
+            ${m.pp>0?`蛋白质 <span>${protG}g</span> <span style="color:var(--text3);font-weight:400">${protG*4}kcal</span> (${m.pp}%)`:''}
+            ${m.pp===0?'<span style="color:var(--text3)">不吃蛋白质</span>':''}
+            <span style="color:#fff;font-weight:700;margin-left:4px">🔥 ${mealKcal} kcal</span>
+          </div>
+          <span class="chevron">&#9660;</span>
+        </div>
+      </div>
+      <div class="meal-card-body">
+        ${m.isSnack?renderSnackNote():''}
+        ${m.cp>0?renderFoodSelector(key,'carb',carbG,m):''}
+        ${m.pp>0?renderFoodSelector(key,'protein',protG,m):''}
+      </div>
+    </div>`;
+  }).join('');
+
+  // Daily total row
+  const dailyCarb = meals.reduce((sum,m,i)=>sum+Math.round(carbTotal*m.cp/100),0);
+  const dailyProt = meals.reduce((sum,m,i)=>sum+Math.round(protTotal*m.pp/100),0);
+  const dailyKcal = dailyCarb*4 + dailyProt*4;
+  const targetKcal = dt==='force'?c.eatForce:c.eatRest;
+  const totalRow = document.createElement('div');
+  totalRow.className = 'meal-card';
+  totalRow.style.cssText = 'border:2px solid var(--amber);background:rgba(245,158,11,.05)';
+  totalRow.innerHTML = `
+    <div class="meal-card-header" style="cursor:default;border-bottom:none">
+      <span class="meal-name">&#128200; 全天合计</span>
+      <div class="meal-macros">
+        碳水 <span>${dailyCarb}g</span> <span style="color:var(--text3);font-weight:400">${dailyCarb*4}kcal</span> &nbsp;蛋白质 <span>${dailyProt}g</span> <span style="color:var(--text3);font-weight:400">${dailyProt*4}kcal</span>
+        <span style="color:#fff;font-weight:700;margin-left:4px">🔥 ${dailyKcal} kcal</span>
+        <span style="color:var(--text3);font-size:.65rem;margin-left:4px">(应吃 ${targetKcal} kcal)</span>
+      </div>
+    </div>`;
+  container.appendChild(totalRow);
+
+  // Bind click handlers for food options
+  container.querySelectorAll('.food-option').forEach(opt=>{
+    opt.addEventListener('click',function(){
+      const parent = this.parentElement;
+      parent.querySelectorAll('.food-option').forEach(x=>x.classList.remove('selected'));
+      this.classList.add('selected');
+      const catKey = parent.dataset.catKey;
+      const foodName = this.dataset.food;
+      state.mealSelections[catKey] = foodName;
+      updateFoodResult(parent.parentElement,catKey);
+    });
+  });
+
+  // Apply stored selections & update result displays
+  Object.entries(state.mealSelections).forEach(([k,v])=>{
+    const opt = container.querySelector(`.food-option[data-food="${CSS.escape(v)}"][data-cat-key="${CSS.escape(k)}"]`);
+    if(opt) opt.classList.add('selected');
+    const resultDiv = container.querySelector(`.food-result[data-cat-key="${CSS.escape(k)}"]`);
+    if(resultDiv) updateFoodResultDirect(resultDiv,k,v);
+  });
+}
+
+// Auto-select sensible default foods for each meal
+function autoSelectDefaults(key,carbG,protG,meal,idx){
+  const catCarb = `${key}-carb`;
+  const catProt = `${key}-protein`;
+
+  const mealName = meal.meal;
+  const isBreakfast = mealName.includes('早饭');
+  const isPreWorkout = mealName.includes('练前餐');
+  const isSnack = meal.isSnack;
+
+  // Carb defaults
+  if(carbG > 0 && !isSnack){
+    for(const [cat,foods] of Object.entries(FOOD_DB.carbs)){
+      const ck = `${catCarb}-${cat}`;
+      if(!state.mealSelections[ck]){
+        if(isPreWorkout){
+          if(cat==='麦类主食') state.mealSelections[ck] = '切片面包';
+          else if(cat==='米类主食') state.mealSelections[ck] = '米饭（一般）';
+          else if(cat==='便携碳水') state.mealSelections[ck] = '切片面包/碱水面包';
+        }else if(isBreakfast){
+          if(cat==='麦类主食') state.mealSelections[ck] = '切片面包';
+          else if(cat==='其他主食') state.mealSelections[ck] = '速食燕麦片（生）';
+          else if(cat==='米类主食') state.mealSelections[ck] = '米饭（一般）';
+        }else{
+          if(cat==='米类主食') state.mealSelections[ck] = '米饭（一般）';
+          else if(cat==='麦类主食') state.mealSelections[ck] = '馒头/花卷/馍/馕';
+          else if(cat==='其他主食') state.mealSelections[ck] = '红薯（生/蒸煮）';
+        }
+      }
+    }
+  }
+
+  // Protein defaults
+  if(protG > 0 && !isSnack){
+    for(const [cat,foods] of Object.entries(FOOD_DB.protein)){
+      const ck = `${catProt}-${cat}`;
+      if(!state.mealSelections[ck]){
+        if(isBreakfast){
+          if(cat==='含蛋白质混合物') state.mealSelections[ck] = '鸡蛋+牛奶';
+          else if(cat==='干净蛋白质') state.mealSelections[ck] = '蛋白粉';
+        }else{
+          if(cat==='干净蛋白质') state.mealSelections[ck] = '瘦肉（一般的熟肉）';
+          else if(cat==='含蛋白质混合物') state.mealSelections[ck] = '鸡蛋（全蛋）';
+        }
+      }
+    }
+  }
+}
+
+function renderSnackNote(){
+  return `<div class="callout" style="font-size:.7rem;margin-bottom:10px">
+    &#9888;&#65039; 这10%碳水用来抵扣牛奶、蔬菜、调料里未计入的碳水，<b>不是用来专门吃碳水食物的</b>。<br>
+    不吃碳水食物（面包、米面、奶茶、水果等），不吃糖油混合物（饼干、膨化、甜品糕点等）。<br>
+    如果不吃零食/夜宵，在其他各餐多吃几口瘦肉或主食即可。
+  </div>`;
+}
+
+function renderFoodSelector(parentKey,catType,gramsNeeded,meal){
+  const db = FOOD_DB[catType==='carb'?'carbs':'protein'];
+  const label = catType==='carb'?'🍚 碳水食物':'🥩 蛋白质食物';
+  const unit = catType==='carb'?'碳水率':'蛋白质率';
+
+  let html = `<div style="margin-bottom:12px"><div style="font-weight:700;font-size:.8rem;margin-bottom:6px">${label} — 需要 <span style="color:var(--amber)">${gramsNeeded}g</span></div>`;
+
+  for(const [cat, foods] of Object.entries(db)){
+    html += `<div class="food-category">
+      <div class="food-category-label">${cat}</div>
+      <div class="food-options" data-cat-key="${parentKey}-${catType}-${cat}">`;
+    foods.forEach(f=>{
+      html += `<button class="food-option" data-food="${f.n}" data-cat-key="${parentKey}-${catType}-${cat}">${f.n}</button>`;
+    });
+    html += `</div>
+      <div class="food-result" data-cat-key="${parentKey}-${catType}-${cat}"></div>
+    </div>`;
+  }
+  html += '</div>';
+  return html;
+}
+
+function updateFoodResult(container,catKey){
+  const resultDiv = container.querySelector(`.food-result[data-cat-key="${catKey}"]`);
+  const foodName = state.mealSelections[catKey];
+  updateFoodResultDirect(resultDiv,catKey,foodName);
+}
+
+function updateFoodResultDirect(resultDiv,catKey,foodName){
+  if(!resultDiv || !foodName){resultDiv&&(resultDiv.className='food-result');return;}
+
+  // Find the food data
+  let foodData = null;
+  let isPerUnit = false;
+  for(const db of [FOOD_DB.carbs,FOOD_DB.protein]){
+    for(const [,foods] of Object.entries(db)){
+      for(const f of foods){
+        if(f.n===foodName){foodData=f;if(f.perUnit)isPerUnit=true;break;}
+      }
+      if(foodData)break;
+    }
+    if(foodData)break;
+  }
+  if(!foodData)return;
+
+  // Determine needed grams from the meal
+  const parts = catKey.split('-');
+  const schemeId = parts[0];
+  const dayType = parts[1];
+  const mealIdx = parseInt(parts[2]);
+  const catType = parts[3]; // 'carb' or 'protein'
+  const s = SCHEMES[schemeId];
+  const dt = s.id==='s8'?'force':dayType;
+  const c = calc();
+  const carbTotal = dt==='force'?c.carbForceTotal:c.carbRestTotal;
+  const protTotal = dt==='force'?c.protForceTotal:c.protRestTotal;
+  const meal = s[dt][mealIdx];
+  const neededG = catType==='carb'?Math.round(carbTotal*meal.cp/100):Math.round(protTotal*meal.pp/100);
+
+  let text;
+  if(isPerUnit){
+    const units = Math.round(neededG/foodData.perUnit*10)/10;
+    text = `${foodName}：约 <b>${units} ${foodData.unit}</b>（每${foodData.unit}${foodData.perUnit}g蛋白质）`;
+  }else{
+    const rate = catType==='carb'?foodData.r:foodData.r;
+    const grams = Math.round(neededG/rate);
+    text = `${foodName}：吃 <b>${grams}g</b>（${catType==='carb'?'碳水':'蛋白质'}率 ${Math.round(rate*100)}%）`;
+  }
+  if(foodData.note) text += ` · <span style="font-size:.7rem;color:var(--text3)">${foodData.note}</span>`;
+
+  resultDiv.innerHTML = text;
+  resultDiv.className = 'food-result show';
+}
+
+function renderTrainingTabs(){
+  document.getElementById('trainingTabs').innerHTML = Object.entries(TRAINING).map(([k,v],i)=>
+    `<button class="training-tab${i===0?' active':''}" data-day="${k}">Day ${i+1}</button>`
+  ).join('');
+  document.querySelectorAll('#trainingTabs button').forEach(b=>b.addEventListener('click',()=>{
+    document.querySelectorAll('#trainingTabs button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    document.querySelectorAll('.training-day').forEach(d=>d.classList.remove('active'));
+    document.getElementById('train-'+b.dataset.day).classList.add('active');
+  }));
+}
+function renderTrainingContent(){
+  const container = document.getElementById('trainingContent');
+  container.innerHTML = Object.entries(TRAINING).map(([k,v],i)=>
+    `<div class="training-day${i===0?' active':''}" id="train-${k}">
+      <h3 style="font-size:.95rem;margin-bottom:4px;color:#fff">${v.title}</h3>
+      <p style="font-size:.75rem;color:var(--text3);margin-bottom:12px">${v.desc}</p>
+      ${v.groups.map(g=>`
+        <div class="training-group">
+          <h4>${g.name}</h4>
+          <ul>${g.items.map(it=>`<li>${it}</li>`).join('')}</ul>
+        </div>
+      `).join('')}
+    </div>`
+  ).join('');
+}
+
+function updateCardioCalc(){
+  const restHR = parseFloat(document.getElementById('restHR').value)||70;
+  const activeHR = parseFloat(document.getElementById('activeHR').value)||120;
+  const kcalPerKg = activeHR/restHR*6.4-6.2;
+  document.getElementById('cardioKcal').textContent = kcalPerKg>0?Math.round(kcalPerKg*10)/10:'—';
+}
+
+function bindInputs(){
+  ['height','weight','age','trainLevel','cardioHours','bfCurrent','bfTarget'].forEach(id=>{
+    document.getElementById(id).addEventListener('input',updateAll);
+    document.getElementById(id).addEventListener('change',updateAll);
+  });
+  document.getElementById('restHR').addEventListener('input',updateCardioCalc);
+  document.getElementById('activeHR').addEventListener('input',updateCardioCalc);
+}
+
+// ============ START ============
+init();
+updateCardioCalc();
+</script>
+</body>
+</html>
