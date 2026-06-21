@@ -459,6 +459,17 @@ body::before{
       <input type="number" id="age" value="24" min="14" max="80" step="1">
     </div>
     <div class="input-group">
+      <label>蛋白质配额 (g/kg)</label>
+      <select id="proteinQuota">
+        <option value="1.2">1.2 — 最低保肌</option>
+        <option value="1.4">1.4 — 保守推荐</option>
+        <option value="1.6" selected>1.6 — 标准推荐</option>
+        <option value="1.8">1.8 — 激进保肌</option>
+        <option value="2.0">2.0 — 增肌/大体重</option>
+        <option value="2.2">2.2 — 极低碳水/备赛</option>
+      </select>
+    </div>
+    <div class="input-group">
       <label>训练水平</label>
       <select id="trainLevel">
         <option value="novice">新手</option>
@@ -480,7 +491,7 @@ body::before{
     </div>
   </div>
   <div class="callout" style="margin-top:14px;font-size:.72rem">
-    &#128161; 碳水和蛋白质配额由计算器<b>自动根据应吃热量推导</b>，无需手动填写。如需微调，可在下方「计算结果」区域直接修改。
+    &#128161; 蛋白质配额可在下拉框中选择，碳水由计算器<b>自动根据应吃热量推导</b>。如需微调，可在下方「计算结果」区域直接修改。
   </div>
 </div>
 
@@ -516,8 +527,8 @@ body::before{
         <p style="margin-left:16px;color:var(--text3">休息日无训练消耗，仅有无运动总消耗 + 有氧</p>
         <p><b>7. 应吃热量</b> = 平衡热量 × 0.64</p>
         <p style="margin-left:16px;color:var(--text3">0.64 = 0.8 × 0.8。第一个 0.8 是制造 20% 热量缺口；第二个 0.8 是预留 20% 缓冲，防止低估食物热量（外食油大、酱料、饮料等隐形热量）</p>
-        <p><b>8. 蛋白质配额</b> = 1.6 g/kg（固定值）</p>
-        <p style="margin-left:16px;color:var(--text3">减脂期保肌的标准推荐量，不随热量变化。蛋白质热量 = 克数 × 4 kcal</p>
+        <p><b>8. 蛋白质配额</b> = 用户选择值 g/kg（默认 1.6 g/kg）</p>
+        <p style="margin-left:16px;color:var(--text3">减脂期保肌推荐范围：最低 1.2 → 保守 1.4 → 标准 1.6 → 激进 1.8 → 增肌 2.0 → 备赛 2.2 g/kg。蛋白质热量 = 克数 × 4 kcal</p>
         <p><b>9. 估算脂肪热量</b> = 0.55 × 体重(kg) × 9 kcal</p>
         <p style="margin-left:16px;color:var(--text3">脂肪不计算精确克数，按蛋黄 + 牛奶 + 炒菜油 ≈ 0.55 g/kg 估算。脂肪不参与餐单分配，靠脂肪摄入规则（见底部「脂肪摄入规则」）约束</p>
         <p><b>10. 碳水总量</b> =（应吃热量 − 蛋白质热量 − 估算脂肪热量）÷ 4</p>
@@ -1011,9 +1022,10 @@ function calc(){
   const eatRest = balanceRest*0.64;
 
   // AUTO-DERIVED QUOTAS:
-  // Protein: fixed 1.6 g/kg (standard recommendation for fat loss muscle preservation)
-  const protF = 1.6;
-  const protR = 1.6;
+  // Protein: user-selectable g/kg (default 1.6, standard recommendation for fat loss muscle preservation)
+  const protQuota = parseFloat(document.getElementById('proteinQuota').value)||1.6;
+  const protF = protQuota;
+  const protR = protQuota;
   const protForceTotal = Math.round(protF*w);
   const protRestTotal = Math.round(protR*w);
   const protForceCal = protForceTotal*4;
@@ -1086,6 +1098,7 @@ function updateAll(){
 function renderResults(){
   const c = calc();
   const isNoTrain = SCHEMES[state.scheme].id === 's8';
+  const protQuota = parseFloat(document.getElementById('proteinQuota').value)||1.6;
 
   const cards = [
     {v:c.bmi.toFixed(1),l:'BMI',hl:c.bmi>=28||c.bmi<18.5},
@@ -1103,7 +1116,7 @@ function renderResults(){
       {v:c.eatRest,l:'&#127919; 应吃热量·休息日',hl:true}
     ]),
     ...(isNoTrain?[
-      {v:'1.6 g/kg',l:'🥩 蛋白质配额（固定）',hl:true,sub:'减脂保肌标准值'},
+      {v:`${protQuota} g/kg`,l:'🥩 蛋白质配额',hl:true,sub:'减脂保肌推荐值'},
       {v:'~0.55 g/kg',l:'🧈 估算脂肪（隐式）',hl:true,sub:'蛋黄+牛奶+炒菜油'},
       {v:c.protRestTotal+'g',l:'蛋白质总量/天',hl:true},
       {v:(c.protRestTotal*4)+' kcal',l:'蛋白质热量 (×4)',hl:false},
@@ -1111,7 +1124,7 @@ function renderResults(){
       {v:c.carbRestCal+' kcal',l:'碳水热量（剩余）',hl:false},
       {v:c.carbRestTotal+'g',l:'🍚 碳水总量/天',hl:true,sub:`= ${c.carbR} g/kg`}
     ]:[
-      {v:'1.6 g/kg',l:'🥩 蛋白质配额（固定）',hl:true,sub:'减脂保肌标准值'},
+      {v:`${protQuota} g/kg`,l:'🥩 蛋白质配额',hl:true,sub:'减脂保肌推荐值'},
       {v:'~0.55 g/kg',l:'🧈 估算脂肪（隐式）',hl:true,sub:'蛋黄+牛奶+炒菜油'},
       {v:c.protForceTotal+'g',l:'蛋白质总量·力训日',hl:true},
       {v:c.protRestTotal+'g',l:'蛋白质总量·休息日',hl:true},
@@ -1403,6 +1416,7 @@ function bindInputs(){
     document.getElementById(id).addEventListener('input',updateAll);
     document.getElementById(id).addEventListener('change',updateAll);
   });
+  document.getElementById('proteinQuota').addEventListener('change',updateAll);
   document.getElementById('restHR').addEventListener('input',updateCardioCalc);
   document.getElementById('activeHR').addEventListener('input',updateCardioCalc);
 }
