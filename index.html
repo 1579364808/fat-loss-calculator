@@ -490,6 +490,53 @@ body::before{
   <div class="results-grid" id="resultsGrid"></div>
 </div>
 
+<!-- Section: Formula Reference -->
+<div class="section" id="formulaSection">
+  <div class="collapse" id="formulaCollapse">
+    <div class="collapse-header" onclick="this.parentElement.classList.toggle('open')" style="padding:0;border:none;margin-bottom:0">
+      <span class="section-title" style="margin-bottom:0">&#128218; 计算公式说明</span>
+      <span class="chevron" style="color:var(--text3)">&#9660;</span>
+    </div>
+    <div class="collapse-body" style="margin-top:16px">
+      <div style="font-size:.78rem;color:var(--text2);line-height:2">
+        <p><b>1. BMI</b> = 体重(kg) ÷ 身高(m)²</p>
+        <p><b>2. 基础代谢（BMR）</b> — Mifflin-St Jeor 公式</p>
+        <p style="margin-left:16px;color:var(--text3)">男：9.99×体重 + 6.25×身高(cm) − 4.92×年龄 + 5</p>
+        <p style="margin-left:16px;color:var(--text3)">女：9.99×体重 + 6.25×身高(cm) − 4.92×年龄 − 161</p>
+        <p><b>3. 无运动总消耗</b> = BMR ÷ 0.7</p>
+        <p style="margin-left:16px;color:var(--text3)">假设基础代谢占全天能耗的 70%，反推总消耗</p>
+        <p><b>4. 力训消耗</b>（一次力量训练额外消耗）</p>
+        <table style="margin-left:16px;font-size:.72rem;border-collapse:collapse;color:var(--text3)">
+          <tr><td style="padding:2px 16px 2px 0">男：新手 150 · 有基础 200 · 老手 250 kcal</td></tr>
+          <tr><td style="padding:2px 16px 2px 0">女：新手 100 · 有基础 150 · 老手 200 kcal</td></tr>
+        </table>
+        <p><b>5. 有氧日均消耗</b> = 6.5 × 体重(kg) × 每周有氧小时数 ÷ 7</p>
+        <p style="margin-left:16px;color:var(--text3">以心率 120 左右中等强度估算，约 6.5 kcal/kg/h。可在上方「有氧热量参考」区用实际心率校准</p>
+        <p><b>6. 平衡热量</b> = 无运动总消耗 + 力训消耗 + 有氧日均消耗</p>
+        <p style="margin-left:16px;color:var(--text3">休息日无训练消耗，仅有无运动总消耗 + 有氧</p>
+        <p><b>7. 应吃热量</b> = 平衡热量 × 0.64</p>
+        <p style="margin-left:16px;color:var(--text3">0.64 = 0.8 × 0.8。第一个 0.8 是制造 20% 热量缺口；第二个 0.8 是预留 20% 缓冲，防止低估食物热量（外食油大、酱料、饮料等隐形热量）</p>
+        <p><b>8. 蛋白质配额</b> = 1.6 g/kg（固定值）</p>
+        <p style="margin-left:16px;color:var(--text3">减脂期保肌的标准推荐量，不随热量变化。蛋白质热量 = 克数 × 4 kcal</p>
+        <p><b>9. 估算脂肪热量</b> = 0.55 × 体重(kg) × 9 kcal</p>
+        <p style="margin-left:16px;color:var(--text3">脂肪不计算精确克数，按蛋黄 + 牛奶 + 炒菜油 ≈ 0.55 g/kg 估算。脂肪不参与餐单分配，靠脂肪摄入规则（见底部「脂肪摄入规则」）约束</p>
+        <p><b>10. 碳水总量</b> =（应吃热量 − 蛋白质热量 − 估算脂肪热量）÷ 4</p>
+        <p style="margin-left:16px;color:var(--text3">碳水是填补剩余热量的变量，不是固定值。热量分配给蛋白质和脂肪后，剩下的全部给碳水</p>
+        <p><b>11. 餐单分配</b></p>
+        <p style="margin-left:16px;color:var(--text3">每餐的碳水克数 = 碳水总量 × 该餐百分比（如 35%）；蛋白质同理。百分比来自好人松松视频中的方案设计</p>
+        <p><b>12. 减脂时间估算</b></p>
+        <p style="margin-left:16px;color:var(--text3)">需减纯脂肪(kg) = 体重 ×（当前体脂率% − 目标体脂率%）</p>
+        <p style="margin-left:16px;color:var(--text3)">日均热量缺口 =（力训日缺口×3 + 休息日缺口×4）÷ 7（假设每周 3 练 4 休）</p>
+        <p style="margin-left:16px;color:var(--text3)">预计天数 = 需减脂肪(kg) × 7700 kcal/kg ÷ 日均缺口</p>
+        <p style="margin-left:16px;color:var(--text3)">7700 是 1kg 纯脂肪的热量（9 kcal/g × 1000 × 约 85% 脂肪组织纯度）</p>
+        <p><b>13. 食物重量计算</b></p>
+        <p style="margin-left:16px;color:var(--text3)">所需食物克数 = 该餐需要营养克数 ÷ 该食物的营养率（如米饭碳水率 0.30 → 需要 100g 碳水 ÷ 0.30 = 吃 333g 米饭）</p>
+        <p style="margin-left:16px;color:var(--text3)">鸡蛋牛奶类：所需数量 = 该餐需要蛋白质克数 ÷ 每单位蛋白质克数（如 1 鸡蛋+牛奶 = 16g 蛋白）</p>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Section: Meal Plan -->
 <div class="section">
   <div class="section-title"><span class="icon">&#127860;</span> 每日餐单</div>
