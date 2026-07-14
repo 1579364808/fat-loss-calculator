@@ -410,6 +410,67 @@ body::before{
   color:var(--text2);
 }
 
+/* Canteen protein guide */
+.guide-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
+  gap:12px;
+  margin-bottom:12px;
+}
+.guide-card{
+  background:var(--bg);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:14px;
+}
+.guide-card h4{
+  font-size:.82rem;
+  color:#fff;
+  margin-bottom:6px;
+}
+.guide-card p{
+  font-size:.74rem;
+  color:var(--text2);
+  line-height:1.7;
+}
+.protein-badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:46px;
+  padding:2px 8px;
+  border-radius:999px;
+  background:rgba(245,158,11,.12);
+  color:var(--amber);
+  font-family:var(--font-mono);
+  font-size:.78rem;
+  font-weight:800;
+  margin-right:6px;
+}
+.estimator-total{
+  background:var(--bg);
+  border:1px solid var(--amber2);
+  border-radius:var(--radius-sm);
+  padding:14px;
+  margin-top:12px;
+}
+.estimator-total .total-value{
+  font-family:var(--font-mono);
+  font-size:1.7rem;
+  font-weight:900;
+  color:var(--amber);
+}
+.estimator-total .total-status{
+  font-size:.78rem;
+  color:var(--text2);
+  margin-top:4px;
+}
+.estimator-total .total-tip{
+  font-size:.7rem;
+  color:var(--text3);
+  margin-top:4px;
+}
+
 /* Responsive */
 @media(max-width:640px){
   .header h1{font-size:1.5rem}
@@ -559,6 +620,76 @@ body::before{
     &#127769; <b>夜里练注意：</b>晚饭到训练之间隔太久容易饿，练前30分钟从晚饭碳水里<b>分5-10g出来垫一下</b>（半片吐司/半根香蕉/几颗旺仔小馒头/半瓶脉动），晚饭对应少吃等量碳水。总量不变，只是提前吃。
   </div>
   <div class="meal-list" id="mealList"></div>
+</div>
+
+<!-- Section: Canteen Protein Estimate -->
+<div class="section">
+  <div class="section-title"><span class="icon">&#129385;</span> 堂食蛋白质估算</div>
+  <div class="callout" style="font-size:.72rem">
+    &#128161; 食堂/外卖不用精确称重，先用<b>手掌估算法</b>：一掌熟瘦肉≈25g蛋白质；午餐/晚餐尽量吃到<b>两掌肉</b>。如果菜里肉只有几块，只能算半掌或更少。
+  </div>
+
+  <div class="guide-grid">
+    <div class="guide-card">
+      <h4>一掌熟瘦肉</h4>
+      <p><span class="protein-badge">25g</span> 一个手掌大小，不算手指。适用于鸡胸、鸡腿去皮、鱼虾、瘦牛肉、瘦猪肉。</p>
+    </div>
+    <div class="guide-card">
+      <h4>两掌熟瘦肉</h4>
+      <p><span class="protein-badge">50g</span> 午餐/晚餐的理想蛋白质份量，大约160-220g熟肉。</p>
+    </div>
+    <div class="guide-card">
+      <h4>鸡蛋 / 牛奶</h4>
+      <p><span class="protein-badge">6g</span> 1个鸡蛋；<span class="protein-badge">10g</span> 1盒250ml牛奶。</p>
+    </div>
+    <div class="guide-card">
+      <h4>豆腐 / 蛋白粉</h4>
+      <p><span class="protein-badge">12g</span> 1份豆腐约12g；<span class="protein-badge">23g</span> 1勺乳清蛋白粉约20-25g。</p>
+    </div>
+  </div>
+
+  <div class="collapse open" id="canteenCollapse">
+    <div class="collapse-header" onclick="this.parentElement.classList.toggle('open')">
+      <span style="font-weight:700;font-size:.85rem">堂食蛋白质速算器</span>
+      <span class="chevron">&#9660;</span>
+    </div>
+    <div class="collapse-body">
+      <div class="input-grid">
+        <div class="input-group">
+          <label>熟瘦肉（掌）</label>
+          <input type="number" id="canteenPalms" value="4" min="0" max="10" step="0.5">
+          <span class="hint">午餐两掌 + 晚餐两掌 = 4掌</span>
+        </div>
+        <div class="input-group">
+          <label>鸡蛋（个）</label>
+          <input type="number" id="canteenEggs" value="2" min="0" max="10" step="1">
+        </div>
+        <div class="input-group">
+          <label>牛奶（盒）</label>
+          <input type="number" id="canteenMilk" value="1" min="0" max="6" step="1">
+          <span class="hint">按250ml/盒估算</span>
+        </div>
+        <div class="input-group">
+          <label>豆腐（份）</label>
+          <input type="number" id="canteenTofu" value="0" min="0" max="6" step="0.5">
+        </div>
+        <div class="input-group">
+          <label>蛋白粉（勺）</label>
+          <input type="number" id="canteenPowder" value="0" min="0" max="4" step="0.5">
+        </div>
+      </div>
+      <div class="estimator-total">
+        <div>今日粗估蛋白质</div>
+        <div class="total-value" id="canteenProteinTotal">—</div>
+        <div class="total-status" id="canteenProteinStatus">—</div>
+        <div class="total-tip" id="canteenProteinTip">—</div>
+      </div>
+      <div style="margin-top:12px;font-size:.76rem;color:var(--text2);line-height:1.8">
+        <p><b>堂食判断：</b>如果荤菜里只有几片肉，别按“一掌”算；看盘子里真正吃进去的瘦肉，去掉骨头、皮、肥肉和汤汁后再估。</p>
+        <p><b>点餐口诀：</b>早餐两个蛋一盒奶；午餐一拳饭、两掌肉、两拳菜；训练后减脂餐点双蛋白，米饭半份到一份，酱料另放。</p>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Section: Cardio -->
@@ -1089,6 +1220,7 @@ function updateAll(){
   renderMeals();
   renderSchemeDesc();
   updateCardioCalc();
+  updateCanteenProteinCalc();
   // Show night training hint
   const nightHint = document.getElementById('nightHint');
   const isNightForce = state.scheme==='s7' && state.dayType==='force';
@@ -1411,6 +1543,38 @@ function updateCardioCalc(){
   document.getElementById('cardioKcal').textContent = kcalPerKg>0?Math.round(kcalPerKg*10)/10:'—';
 }
 
+function updateCanteenProteinCalc(){
+  const palmsEl = document.getElementById('canteenPalms');
+  if(!palmsEl)return;
+
+  const palms = parseFloat(palmsEl.value)||0;
+  const eggs = parseFloat(document.getElementById('canteenEggs').value)||0;
+  const milk = parseFloat(document.getElementById('canteenMilk').value)||0;
+  const tofu = parseFloat(document.getElementById('canteenTofu').value)||0;
+  const powder = parseFloat(document.getElementById('canteenPowder').value)||0;
+  const total = Math.round(palms*25 + eggs*6 + milk*10 + tofu*12 + powder*23);
+  const target = calc().protForceTotal;
+  const diff = total - target;
+
+  document.getElementById('canteenProteinTotal').textContent = `${total}g / 目标约 ${target}g`;
+
+  let status;
+  let tip;
+  if(diff >= 0){
+    status = `✅ 基本够了，比目标多约 ${diff}g。`;
+    tip = '保持肉类选择干净，少选肥牛、鸡翅、排骨、丸子、油炸肉和重酱汁。';
+  }else if(diff >= -15){
+    status = `🟡 接近目标，还差约 ${Math.abs(diff)}g。`;
+    tip = '可以加1个鸡蛋、1盒牛奶，或把晚餐肉量加到两掌。';
+  }else{
+    status = `🔴 明显不够，还差约 ${Math.abs(diff)}g。`;
+    tip = '优先补一掌瘦肉，或加1勺蛋白粉/1包即食鸡胸。不要用高脂肉硬凑蛋白质。';
+  }
+
+  document.getElementById('canteenProteinStatus').textContent = status;
+  document.getElementById('canteenProteinTip').textContent = tip;
+}
+
 function bindInputs(){
   ['height','weight','age','trainLevel','cardioHours','bfCurrent','bfTarget'].forEach(id=>{
     document.getElementById(id).addEventListener('input',updateAll);
@@ -1419,11 +1583,19 @@ function bindInputs(){
   document.getElementById('proteinQuota').addEventListener('change',updateAll);
   document.getElementById('restHR').addEventListener('input',updateCardioCalc);
   document.getElementById('activeHR').addEventListener('input',updateCardioCalc);
+  ['canteenPalms','canteenEggs','canteenMilk','canteenTofu','canteenPowder'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el){
+      el.addEventListener('input',updateCanteenProteinCalc);
+      el.addEventListener('change',updateCanteenProteinCalc);
+    }
+  });
 }
 
 // ============ START ============
 init();
 updateCardioCalc();
+updateCanteenProteinCalc();
 </script>
 </body>
 </html>
