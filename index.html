@@ -745,11 +745,58 @@ body::before{
 
 <!-- Section: Cardio -->
 <div class="section">
-  <div class="section-title"><span class="icon">&#128692;</span> 有氧热量参考</div>
-  <div class="callout">用于估算「有氧消耗」字段。饮食方案里的「有氧消耗」= 有氧运动每小时热量消耗 × 每周小时数 ÷ 7天</div>
-  <div class="collapse" id="cardioCollapse">
+  <div class="section-title"><span class="icon">&#128692;</span> 跑步机热量计算器</div>
+  <div class="callout" style="font-size:.72rem">
+    &#128161; 基于 <b>ACSM 运动医学公式</b>。速度 ≤6 km/h 用走步公式，&gt;6 km/h 自动切换到跑步公式。扶扶手打 <b>7.5 折</b>。饮食方案中的「有氧消耗」字段仍沿用原来的 6.5 kcal/kg/h 粗估，与此计算器独立。
+  </div>
+
+  <div class="input-grid">
+    <div class="input-group">
+      <label>体重 (kg)</label>
+      <input type="number" id="treadmillWeight" value="65" min="30" max="250" step="0.1">
+      <span class="hint">自动取身体数据，可手动改</span>
+    </div>
+    <div class="input-group">
+      <label>速度 (km/h)</label>
+      <input type="number" id="treadmillSpeed" value="6" min="1" max="20" step="0.1">
+    </div>
+    <div class="input-group">
+      <label>坡度 (%)</label>
+      <input type="number" id="treadmillGrade" value="8" min="0" max="15" step="0.5">
+    </div>
+    <div class="input-group">
+      <label>时长 (分钟)</label>
+      <input type="number" id="treadmillDuration" value="30" min="5" max="180" step="5">
+    </div>
+    <div class="input-group">
+      <label>扶手支撑</label>
+      <div class="radio-group" id="treadmillHandrail"></div>
+      <span class="hint">不扶 = 全额消耗；扶 = 打 7.5 折</span>
+    </div>
+  </div>
+
+  <div class="results-grid" style="margin-top:16px">
+    <div class="result-card">
+      <div class="value highlight" id="treadmillKcal">—</div>
+      <div class="label">本次消耗 (kcal)</div>
+    </div>
+    <div class="result-card">
+      <div class="value" id="treadmillKcalPerHr">—</div>
+      <div class="label">每小时消耗 (kcal)</div>
+    </div>
+    <div class="result-card">
+      <div class="value" id="treadmillKcalPerKg">—</div>
+      <div class="label">每kg消耗 (kcal/kg/h)</div>
+    </div>
+    <div class="result-card">
+      <div class="value" id="treadmillFormula">—</div>
+      <div class="label">使用公式</div>
+    </div>
+  </div>
+
+  <div class="collapse" id="cardioCollapse" style="margin-top:16px">
     <div class="collapse-header" onclick="this.parentElement.classList.toggle('open')">
-      <span style="font-weight:700;font-size:.85rem">心率法估算</span>
+      <span style="font-weight:700;font-size:.85rem">心率法估算（对比参考）</span>
       <span class="chevron">&#9660;</span>
     </div>
     <div class="collapse-body">
@@ -770,6 +817,7 @@ body::before{
       <p style="font-size:.68rem;color:var(--text3)">公式：每kg消耗 = 活动心率 ÷ 静息心率 × 6.4 - 6.2</p>
     </div>
   </div>
+
   <div style="margin-top:12px">
     <p style="font-size:.72rem;color:var(--text3)"><b>运动项目法（简化参考）：</b> 走路 3-5 kcal/kg/h · 跑步 7-12 kcal/kg/h · 骑行 4-8 kcal/kg/h · 游泳 6-10 kcal/kg/h · 跳操 5-8 kcal/kg/h</p>
   </div>
@@ -1266,11 +1314,21 @@ function calc(){
 
 // ============ RENDER ============
 function updateAll(){
+  // Sync treadmill weight from body data
+  const twEl = document.getElementById('treadmillWeight');
+  if(twEl){
+    const bw = getInputs().w;
+    const cur = parseFloat(twEl.value);
+    if(!cur || cur === twEl.defaultValue || Math.abs(cur - bw) < 0.5){
+      twEl.value = bw;
+    }
+  }
   renderResults();
   renderDayTabs();
   renderMeals();
   renderSchemeDesc();
   updateCardioCalc();
+  updateTreadmillCalc();
   updateCanteenProteinCalc();
   // Show night training hint
   const nightHint = document.getElementById('nightHint');
@@ -1594,6 +1652,56 @@ function updateCardioCalc(){
   document.getElementById('cardioKcal').textContent = kcalPerKg>0?Math.round(kcalPerKg*10)/10:'—';
 }
 
+function renderTreadmillHandrail(){
+  const container = document.getElementById('treadmillHandrail');
+  if(!container||container.children.length)return;
+  container.innerHTML = [
+    {v:'no',label:'不扶'},
+    {v:'yes',label:'扶扶手'}
+  ].map(opt=>`<button class="${opt.v==='yes'?'active':''}" data-v="${opt.v}">${opt.label}</button>`).join('');
+  container.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+    container.querySelectorAll('button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    updateTreadmillCalc();
+  }));
+}
+
+function updateTreadmillCalc(){
+  const wEl = document.getElementById('treadmillWeight');
+  if(!wEl)return;
+
+  const w = parseFloat(wEl.value)||getInputs().w;
+  const speedKmh = parseFloat(document.getElementById('treadmillSpeed').value)||6;
+  const grade = parseFloat(document.getElementById('treadmillGrade').value)||8;
+  const duration = parseFloat(document.getElementById('treadmillDuration').value)||30;
+  const handrailBtn = document.querySelector('#treadmillHandrail .active');
+  const handrail = handrailBtn?handrailBtn.dataset.v==='yes':true;
+
+  // ACSM formulas
+  const speedMmin = speedKmh * 1000 / 60;
+  let vo2;
+  let formulaName;
+  if(speedKmh <= 6){
+    vo2 = 0.1 * speedMmin + 1.8 * speedMmin * (grade/100) + 3.5;
+    formulaName = 'ACSM 走步';
+  }else{
+    vo2 = 0.2 * speedMmin + 0.9 * speedMmin * (grade/100) + 3.5;
+    formulaName = 'ACSM 跑步';
+  }
+
+  // kcal = VO2 * weight * 5.05 / 1000 * duration
+  const rawKcal = vo2 * w * 5.05 / 1000 * duration;
+  const handrailFactor = handrail ? 0.75 : 1.0;
+  const kcal = Math.round(rawKcal * handrailFactor);
+  const kcalPerHr = Math.round(kcal / duration * 60);
+  const kcalPerKg = Math.round((kcal / w) * 10) / 10;
+
+  document.getElementById('treadmillKcal').textContent = kcal;
+  document.getElementById('treadmillKcalPerHr').textContent = kcalPerHr;
+  document.getElementById('treadmillKcalPerKg').textContent = kcalPerKg;
+  document.getElementById('treadmillFormula').textContent = formulaName;
+}
+
 function updateCanteenProteinCalc(){
   const palmsEl = document.getElementById('canteenPalms');
   if(!palmsEl)return;
@@ -1641,11 +1749,20 @@ function bindInputs(){
       el.addEventListener('change',updateCanteenProteinCalc);
     }
   });
+  ['treadmillWeight','treadmillSpeed','treadmillGrade','treadmillDuration'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el){
+      el.addEventListener('input',updateTreadmillCalc);
+      el.addEventListener('change',updateTreadmillCalc);
+    }
+  });
 }
 
 // ============ START ============
 init();
 updateCardioCalc();
+renderTreadmillHandrail();
+updateTreadmillCalc();
 updateCanteenProteinCalc();
 </script>
 </body>
