@@ -677,6 +677,11 @@ body::before{
           <label>蛋白粉（勺）</label>
           <input type="number" id="canteenPowder" value="0" min="0" max="4" step="0.5">
         </div>
+        <div class="input-group">
+          <label>每勺蛋白粉含量 (g)</label>
+          <input type="number" id="canteenPowderPerScoop" value="23" min="10" max="40" step="0.5">
+          <span class="hint">默认 23g，可按你的蛋白粉标签改</span>
+        </div>
       </div>
       <div class="estimator-total">
         <div>今日粗估蛋白质</div>
@@ -1711,7 +1716,8 @@ function updateCanteenProteinCalc(){
   const milk = parseFloat(document.getElementById('canteenMilk').value)||0;
   const tofu = parseFloat(document.getElementById('canteenTofu').value)||0;
   const powder = parseFloat(document.getElementById('canteenPowder').value)||0;
-  const total = Math.round(palms*25 + eggs*6 + milk*10 + tofu*12 + powder*23);
+  const powderPerScoop = parseFloat(document.getElementById('canteenPowderPerScoop').value)||23;
+  const total = Math.round(palms*25 + eggs*6 + milk*10 + tofu*12 + powder*powderPerScoop);
   const target = calc().protForceTotal;
   const diff = total - target;
 
@@ -1742,7 +1748,7 @@ function bindInputs(){
   document.getElementById('proteinQuota').addEventListener('change',updateAll);
   document.getElementById('restHR').addEventListener('input',updateCardioCalc);
   document.getElementById('activeHR').addEventListener('input',updateCardioCalc);
-  ['canteenPalms','canteenEggs','canteenMilk','canteenTofu','canteenPowder'].forEach(id=>{
+  ['canteenPalms','canteenEggs','canteenMilk','canteenTofu','canteenPowder','canteenPowderPerScoop'].forEach(id=>{
     const el = document.getElementById(id);
     if(el){
       el.addEventListener('input',updateCanteenProteinCalc);
